@@ -133,6 +133,8 @@ set(
   include/xdg_shell_v6.h
   include/xdg_shell_stable.h
   include/xdg_output_v1.h
+  include/layer_shell_v1.h
+  include/foreign_toplevel_management_v1.h
 
   src/data_device.cpp
   src/gtk_primary_selection.cpp
@@ -141,6 +143,7 @@ set(
   src/xdg_shell_v6.cpp
   src/xdg_shell_stable.cpp
   src/layer_shell_v1.cpp
+  src/foreign_toplevel_management_v1.cpp
   src/main.cpp
   src/primary_selection.cpp
   src/shared_library.cpp
