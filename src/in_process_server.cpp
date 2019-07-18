@@ -29,6 +29,7 @@
 #include "generated/wayland-client.h"
 #include "generated/xdg-shell-unstable-v6-client.h"
 #include "generated/xdg-shell-client.h"
+#include "generated/wlr-foreign-toplevel-management-unstable-v1-client.h"
 
 #include "linux/input.h"
 #include <boost/throw_exception.hpp>
@@ -814,6 +815,25 @@ public:
                 "Consider using CheckInterfaceExpected to disable this test when protocol not suppoeted"});
     }
 
+    zwlr_foreign_toplevel_manager_v1* foreign_toplevel_manager_v1_bind() const
+    {
+        if (foreign_toplevel_manager_v1_id)
+        {
+            return static_cast<struct zwlr_foreign_toplevel_manager_v1*>(
+                wl_registry_bind(
+                    registry,
+                    foreign_toplevel_manager_v1_id.value(),
+                    &zwlr_foreign_toplevel_manager_v1_interface,
+                    foreign_toplevel_manager_v1_version));
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error{
+                "zwlr_foreign_toplevel_manager_v1 not supported by server; "
+                "Consider using CheckInterfaceExpected to disable this test when protocol not suppoeted"});
+        }
+    }
+
     wl_surface* window_under_cursor() const
     {
         if (pointer_events_pending())
@@ -1484,11 +1504,22 @@ private:
             me->layer_shell_v1 = static_cast<struct zwlr_layer_shell_v1*>(
                 wl_registry_bind(registry, id, &zwlr_layer_shell_v1_interface, version));
         }
+        else if ("zwlr_foreign_toplevel_manager_v1"s == interface)
+        {
+            me->foreign_toplevel_manager_v1_id = id;
+            me->foreign_toplevel_manager_v1_version = version;
+        }
     }
 
-    static void global_removed(void*, wl_registry*, uint32_t)
+    static void global_removed(void* ctx, wl_registry*, uint32_t id)
     {
         // TODO: Remove our globals
+
+        auto me = static_cast<Impl*>(ctx);
+        if (id == me->foreign_toplevel_manager_v1_id)
+        {
+            me->foreign_toplevel_manager_v1_id = std::experimental::nullopt;
+        }
     }
 
     constexpr static wl_registry_listener registry_listener = {
@@ -1514,6 +1545,9 @@ private:
     struct zwlr_layer_shell_v1* layer_shell_v1 = nullptr;
     struct zwp_primary_selection_device_manager_v1* primary_selection_device_manager = nullptr;
     struct gtk_primary_selection_device_manager* gtk_primary_selection_device_manager_ = nullptr;
+
+    std::experimental::optional<uint32_t> foreign_toplevel_manager_v1_id;
+    uint32_t foreign_toplevel_manager_v1_version;
 
     struct SurfaceLocation
     {
@@ -1656,6 +1690,11 @@ xdg_wm_base* wlcs::Client::xdg_shell_stable() const
 zwlr_layer_shell_v1* wlcs::Client::layer_shell_v1() const
 {
     return impl->the_layer_shell_v1();
+}
+
+zwlr_foreign_toplevel_manager_v1* wlcs::Client::zwlr_foreign_toplevel_manager_v1_bind() const
+{
+    return impl->foreign_toplevel_manager_v1_bind();
 }
 
 wl_surface* wlcs::Client::window_under_cursor() const
