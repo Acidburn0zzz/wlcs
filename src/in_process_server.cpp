@@ -1810,6 +1810,7 @@ public:
 
     void attach_visible_buffer(int width, int height)
     {
+        wl_surface_commit(surface_);
         attach_buffer(width, height);
         auto surface_rendered = std::make_shared<bool>(false);
         add_frame_callback([surface_rendered](auto) { *surface_rendered = true; });
